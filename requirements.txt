@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+transformers
+torch
+prometheus-client
+pydantic
+python-dotenv
+loguru
