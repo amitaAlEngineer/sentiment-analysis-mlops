@@ -34,4 +34,5 @@ def test_empty_text():
         "/predict",
         json={"text": ""}
     )
-    assert response.status_code == 500
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Text cannot be empty"}

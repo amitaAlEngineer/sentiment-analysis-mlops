@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, status
 from .model import SentimentModel
 from .schemas import SentimentRequest, SentimentResponse
 import logging
@@ -41,6 +41,15 @@ async def predict_sentiment(request: SentimentRequest):
     try:
         result = model.predict(request.text)
         return result
+    except ValueError as e:
+        logging.warning(f"Validation error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
     except Exception as e:
         logging.error(f"API error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error"
+        )

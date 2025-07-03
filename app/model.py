@@ -58,6 +58,11 @@ class SentimentModel:
         REQUEST_COUNTER.inc()
         start_time = time.time()
         
+        # Validate input
+        if not text or not text.strip():
+            logger.warning("Empty text input received")
+            raise ValueError("Text cannot be empty")
+        
         try:
             result = self.pipeline(text)[0]
             latency = time.time() - start_time
