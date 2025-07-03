@@ -6,3 +6,6 @@ prometheus-client
 pydantic
 python-dotenv
 loguru
+httpx
+pytest
+pytest-cov
