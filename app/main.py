@@ -30,6 +30,10 @@ app.mount("/metrics", metrics_app)
 # Initialize model
 model = SentimentModel()
 
+@app.get("/")
+async def health_check():
+    return b"WELCOME TO THE SENTIMENT ANALYSIS"
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""

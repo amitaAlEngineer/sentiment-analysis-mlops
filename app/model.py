@@ -3,6 +3,7 @@ import logging
 from typing import Dict, Any
 from prometheus_client import Counter, Histogram
 import time
+import torch
 
 
 # from transformers import AutoTokenizer, AutoModelForSequenceClassification
@@ -39,14 +40,23 @@ class SentimentModel:
     def load_model(self):
         """Load the DistilBERT model"""
         try:
+            # Check GPU availability
+            device = 0 if torch.cuda.is_available() else -1
+            torch_dtype = torch.float16 if device == 0 else torch.float32
+            
             model_name = "distilbert-base-uncased-finetuned-sst-2-english"
             self.tokenizer = AutoTokenizer.from_pretrained(model_name)
             self.model = AutoModelForSequenceClassification.from_pretrained(model_name)
             self.pipeline = pipeline(
-                "sentiment-analysis",
+                task="sentiment-analysis",
                 model=self.model,
-                tokenizer=self.tokenizer
+                tokenizer=self.tokenizer,
+                torch_dtype=torch_dtype,
+                device=device,
+                truncation=True,
+                padding=True
             )
+            
             logger.info("Model loaded successfully")
         except Exception as e:
             logger.error(f"Error loading model: {str(e)}")
