@@ -38,11 +38,20 @@ PREDICTION_GAUGE = Histogram(
     ['sentiment']
 )
 
+TRAINING_COUNTER = Counter(
+    'model_retrainings_total',
+    'Total number of model retrainings'
+)
+
+# Increment in retrain method
+TRAINING_COUNTER.inc()
+
 class SentimentModel:
     def __init__(self):
         self.model = None
         self.tokenizer = None
         self.pipeline = None
+        self.retrained_model_path = "./retrained_model"
         self.load_model()
 
     def load_model(self):
@@ -52,7 +61,14 @@ class SentimentModel:
             device = 0 if torch.cuda.is_available() else -1
             torch_dtype = torch.float16 if device == 0 else torch.float32
             
-            model_name = "distilbert-base-uncased-finetuned-sst-2-english"
+            if os.path.exists(self.retrained_model_path):
+                model_name = self.retrained_model_path
+                logger.info("Loading retrained model")
+            else:
+                model_name = "distilbert-base-uncased-finetuned-sst-2-english"
+                logger.info("Loading base pretrained model")
+            
+            # model_name = "distilbert-base-uncased-finetuned-sst-2-english"
             self.tokenizer = AutoTokenizer.from_pretrained(model_name)
             self.model = AutoModelForSequenceClassification.from_pretrained(model_name)
             self.pipeline = pipeline(

@@ -5,6 +5,10 @@ import logging
 from prometheus_client import make_asgi_app
 from fastapi.middleware.cors import CORSMiddleware
 from .logging_conf import configure_logging
+from fastapi import BackgroundTasks
+from typing import Optional
+import shutil
+import uuid,os
 
 # Configure logging
 configure_logging()
@@ -57,3 +61,40 @@ async def predict_sentiment(request: SentimentRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"
         )
+        
+
+
+@app.post("/retrain")
+async def retrain_model(background_tasks: BackgroundTasks, dataset_name: Optional[str] = "imdb"):
+    """
+    Trigger model retraining
+    - Uses background task to avoid blocking
+    - Returns immediate response with job ID
+    """
+    job_id = str(uuid.uuid4())
+    
+    async def train_task():
+        try:
+            logging.info(f"Starting training job {job_id}")
+            model.retrain(dataset_name=dataset_name)
+            logging.info(f"Training job {job_id} completed")
+        except Exception as e:
+            logging.error(f"Training job {job_id} failed: {str(e)}")
+    
+    background_tasks.add_task(train_task)
+    return {"status": "training_started", "job_id": job_id}
+
+@app.post("/reset-model")
+async def reset_model():
+    """Revert to the original pretrained model"""
+    try:
+        if os.path.exists(model.retrained_model_path):
+            shutil.rmtree(model.retrained_model_path)
+            logging.info("Deleted retrained model")
+        
+        # Reload original model
+        model.load_model()
+        return {"status": "reset_complete"}
+    except Exception as e:
+        logging.error(f"Reset failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))

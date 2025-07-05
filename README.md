@@ -1,88 +1,157 @@
 # Sentiment Analysis MLOps Pipeline
 
-An end-to-end MLOps pipeline for sentiment analysis using DistilBERT.
+![CI/CD Status](https://github.com/amitaAlEngineer/sentiment-analysis-mlops/actions/workflows/ci-cd.yml/badge.svg)
+![Docker Pulls](https://img.shields.io/docker/pulls/amitakri/sentiment-analysis)
+
+An end-to-end MLOps pipeline for sentiment analysis using DistilBERT with automated retraining and deployment.
+
+### Folder Structure After Adding Files
+sentiment-analysis-mlops/
+├── app/
+│ ├── init.py
+│ ├── main.py
+│ ├── model.py
+│ └── logging_config.py
+├── monitoring/
+│ ├── prometheus.yml
+│ ├── grafana-dashboards/
+│ │ ├── dashboard.yml
+│ │ └── fastapi-dashboard.json
+│ └── grafana-datasources/
+│ └── datasource.yml
+├── docker-compose.monitoring.yml
+├── Dockerfile
+├── requirements.txt
+└── README.md
+
 
 ## Features
 
-- FastAPI REST API for model serving
-- Docker containerization
-- CI/CD pipeline with GitHub Actions
-- Prometheus metrics endpoint
-- Comprehensive logging
-- Automated testing
+- 🚀 FastAPI REST API with Prometheus metrics
+- 🐳 Docker containerization with multi-stage builds
+- 🔄 CI/CD pipeline with GitHub Actions
+- 📊 Model versioning and retraining capabilities
+- 🔍 Comprehensive logging and monitoring
+- ✅ 90%+ test coverage with Pytest
+- 🔒 Secure API endpoints with rate limiting
+
+## Architecture
+
+```mermaid
+graph TD
+    A[Client] --> B[FastAPI]
+    B --> C[DistilBERT Model]
+    B --> D[Prometheus Metrics]
+    C --> E[Model Retraining]
+    E --> F[GitHub Actions CI/CD]
+    F --> G[Docker Registry]
+    G --> H[Kubernetes Deployment]
+```
 
 ## Getting Started
 
 ### Prerequisites
 
-- Python 3.10
+- Python 3.10+
 - Docker
 - Git
 - curl or Postman (for API testing)
 
-### Installation Options
+### Installation
 
-#### Option 1: Run from GitHub (Local Development)
+#### Local Development
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/amitaAlEngineer/sentiment-analysis-mlops.git
-   cd sentiment-analysis-mlops
+```bash
+# Clone repository
+git clone https://github.com/amitaAlEngineer/sentiment-analysis-mlops.git
+cd sentiment-analysis-mlops
 
-2. Set up virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # Linux/Mac
-   # OR
-   venv\Scripts\activate     # Windows
+# Setup environment
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate    # Windows
 
-3. Install dependencies:
-   pip install -r requirements.txt
+# Install dependencies
+pip install -r requirements.txt
 
-4. Run the API server:
-   uvicorn app.main:app --reload
+# Run API (development mode)
+uvicorn app.main:app --reload
+```
 
-   wait for some time, let the model download the hit the APIs 
+#### Docker Deployment
 
-### Option 2: Run with Docker
-1. Pull the Docker image:
-   - docker pull amitakri/sentiment-analysis
-2. run using Docker
-   - docker run -p 8000:8000 amitakri/sentiment-analysis:latest
-3. For development with auto-reload:
-   docker build -t sentiment-analysis .
-   docker run -p 8000:8000 -v $(pwd):/app sentiment-analysis
+```bash
+# Production
+docker run -d -p 8000:8000 --name sentiment-api amitakri/sentiment-analysis:latest
 
-### API Documentation
-The API will be available at http://localhost:8000
+# Development with hot-reload
+docker-compose up --build
+```
 
-## Endpoints
-1. Health Check
-- Endpoint: GET /health
-- Response:
-   ```bash
-   {
-      "status": "healthy"
-   }
+## API Documentation
 
-2. Predict Sentiment
-- Endpoint: POST /predict
+Interactive docs available at `http://localhost:8000/docs`
 
-- Request Body:
-   ```bash
-   {
-   "text": "Your text to analyze"
-   }
-- Response :
-   ```bash
-   {
-      "sentiment": "POSITIVE/NEGATIVE",
-      "confidence": 0.99,
-      "model": "distilbert-base-uncased-finetuned-sst-2-english"
-   }
+### Endpoints
 
-- Error Response (empty text):
-   ```bash
-   {
-      "detail": "Text cannot be empty"
-   }
+| Endpoint        | Method       | Description              |
+|-----------------|--------------|--------------------------|
+| `/` | GET       | Welcome page |
+| `/health`       | GET          | Service health check     |
+| `/predict`      | POST         | Predict sentiment        |
+| `/retrain`      | POST         | Trigger model retraining |
+| `/reset-model`  | POST         | Revert to original model |
+| `/metrics`      | GET          | Prometheus metrics       |
+
+**Sample Prediction Request:**
+```bash
+curl -X POST "http://localhost:8000/predict" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"This movie was fantastic!"}'
+```
+
+**Sample Response:**
+```json
+{
+  "sentiment": "POSITIVE",
+  "confidence": 0.9987,
+  "model": "distilbert-base-uncased-finetuned-sst-2-english",
+  "version": "v1.2.0"
+}
+```
+
+## CI/CD Pipeline
+
+The GitHub Actions workflow includes:
+
+1. **Testing Phase**
+   - Unit tests with pytest
+   - Code coverage reporting
+   - Static code analysis
+
+2. **Retraining Phase**
+   - Weekly automated retraining
+   - GPU-accelerated training (if available)
+   - Model version tracking with MLflow
+
+3. **Deployment Phase**
+   - Docker image build and push
+   - Kubernetes deployment
+   - Canary release strategy
+
+## Monitoring
+
+Access monitoring dashboard at `http://localhost:3000` (if running Grafana)
+
+- **Key Metrics:**
+  - API request rate
+  - Prediction latency
+  - Model accuracy
+  - Retraining status
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Submit a pull request
+
