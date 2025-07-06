@@ -45,7 +45,7 @@ graph TD
     C --> E[Model Retraining]
     E --> F[GitHub Actions CI/CD]
     F --> G[Docker Registry]
-    G --> H[Docker Deployment (Optional/Manual)]
+    G --> H[Docker Deployment - optional]
 ```
 
 ## Getting Started
