@@ -93,26 +93,31 @@ class SentimentModel:
             logger.info("Starting retraining process")
             TRAINING_COUNTER.inc()
 
+            # Load dataset
             dataset = load_dataset(dataset_name)
-            # Preprocess
-            def tokenize_function(examples):
-                return self.tokenizer(examples["text"], padding="max_length", truncation=True)
-            # tokenized = dataset.map(tokenize_function, batched=True)
-            tokenized = dataset.map(tokenize_function, batched=True, num_proc=1)
-
+            
+            # Tokenize (with progress bar)
+            tokenized = dataset.map(
+                lambda x: self.tokenizer(x["text"], padding="max_length", truncation=True),
+                batched=True,
+                load_from_cache_file=False  # Disable caching to prevent hangs
+            )
             # Limit to speed up retraining
             small_train_dataset = tokenized["train"].shuffle(seed=42).select(range(300))
             small_eval_dataset = tokenized["test"].shuffle(seed=42).select(range(100))
-
+            
+            # Training setup
             training_args = TrainingArguments(
                 output_dir=output_dir,
                 num_train_epochs=1,
                 per_device_train_batch_size=8,
-                eval_strategy="epoch",
-                save_strategy="epoch",
+                eval_strategy="steps",  # Changed from "epoch"
+                eval_steps=10,
+                save_strategy="steps",
                 logging_dir="./logs",
                 logging_steps=10,
-                disable_tqdm=False,
+                disable_tqdm=True,  # Disable progress bars in CI
+                report_to="none",    # Disable external reporting
                 seed=42
             )
 
@@ -123,14 +128,15 @@ class SentimentModel:
                 eval_dataset=small_eval_dataset
             )
             
-            # Train and save
-            print("Training model...")
+            # Train with explicit logging
+            logger.info("Training started")
             trainer.train()
-            print("Saving model...")
+            logger.info("Training completed")
+            
+            # Save model
             trainer.save_model(output_dir)
             self.tokenizer.save_pretrained(output_dir)
-            print("Retraining complete.")
-            
+            logger.info("Model saved")
             # Reload the retrained model
             self.model = AutoModelForSequenceClassification.from_pretrained(output_dir)
             self.pipeline = pipeline(

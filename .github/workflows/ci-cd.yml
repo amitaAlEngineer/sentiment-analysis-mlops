@@ -37,37 +37,37 @@ jobs:
       - name: Upload coverage report
         uses: codecov/codecov-action@v3
 
-  retrain-model:
-    needs: test
-    runs-on: ubuntu-latest-with-gpu  # Use GPU for training
-    timeout-minutes: 30
-    if: github.ref == 'refs/heads/main' || github.event_name == 'schedule'
-    steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
-    - name: Install CUDA (if GPU available)
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y nvidia-cuda-toolkit
-    - name: Install dependencies
-      run: |
-        pip install -r requirements.txt
-        pip install datasets torch --extra-index-url https://download.pytorch.org/whl/cu117
-    - name: Retrain model
-      run: |
-        python -c "from model import SentimentModel; SentimentModel().retrain()"
-    - name: Upload retrained model
-      uses: actions/upload-artifact@v3
-      with:
-        name: retrained-model
-        path: retrained_model
-        retention-days: 30
+  # retrain-model:
+  #   needs: test
+  #   runs-on: ubuntu-latest-with-gpu  # Use GPU for training
+  #   timeout-minutes: 30
+  #   if: github.ref == 'refs/heads/main' || github.event_name == 'schedule'
+  #   steps:
+  #   - uses: actions/checkout@v3
+  #   - name: Set up Python
+  #     uses: actions/setup-python@v4
+  #     with:
+  #       python-version: '3.10'
+  #   - name: Install CUDA (if GPU available)
+  #     run: |
+  #       sudo apt-get update
+  #       sudo apt-get install -y nvidia-cuda-toolkit
+  #   - name: Install dependencies
+  #     run: |
+  #       pip install -r requirements.txt
+  #       pip install datasets torch --extra-index-url https://download.pytorch.org/whl/cu117
+  #   - name: Retrain model
+  #     run: |
+  #       python -c "from model import SentimentModel; SentimentModel().retrain()"
+  #   - name: Upload retrained model
+  #     uses: actions/upload-artifact@v3
+  #     with:
+  #       name: retrained-model
+  #       path: retrained_model
+  #       retention-days: 30
 
   deploy:
-    needs: [test, retrain-model]
+    needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
