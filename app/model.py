@@ -69,6 +69,7 @@ class SentimentModel:
                 logger.info("Loading base pretrained model")
             
             # model_name = "distilbert-base-uncased-finetuned-sst-2-english"
+            self.model_name = model_name
             self.tokenizer = AutoTokenizer.from_pretrained(model_name)
             self.model = AutoModelForSequenceClassification.from_pretrained(model_name)
             self.pipeline = pipeline(
@@ -89,33 +90,35 @@ class SentimentModel:
     def retrain(self, dataset_name="imdb", output_dir="./retrained_model"):
         """Retrain the model on new data"""
         try:
-            logger.info("Starting model retraining")
-            
-            # Load dataset
-            dataset = datasets.load_dataset(dataset_name)
-            
+            logger.info("Starting retraining process")
+            TRAINING_COUNTER.inc()
+
+            dataset = load_dataset(dataset_name)
             # Preprocess
             def tokenize_function(examples):
                 return self.tokenizer(examples["text"], padding="max_length", truncation=True)
-            
-            tokenized_datasets = dataset.map(tokenize_function, batched=True)
-            small_train_dataset = tokenized_datasets["train"].shuffle(seed=42).select(range(1000))
-            small_eval_dataset = tokenized_datasets["test"].shuffle(seed=42).select(range(200))
-            
-            # Training setup
+            tokenized = dataset.map(tokenize_function, batched=True)
+
+            # Limit to speed up retraining
+            small_train_dataset = tokenized["train"].shuffle(seed=42).select(range(300))
+            small_eval_dataset = tokenized["test"].shuffle(seed=42).select(range(100))
+
             training_args = TrainingArguments(
                 output_dir=output_dir,
-                per_device_train_batch_size=8,
                 num_train_epochs=1,
+                per_device_train_batch_size=8,
+                evaluation_strategy="epoch",
                 save_strategy="epoch",
-                evaluation_strategy="epoch"
+                logging_dir="./logs",
+                logging_steps=10,
+                seed=42
             )
-            
+
             trainer = Trainer(
                 model=self.model,
                 args=training_args,
                 train_dataset=small_train_dataset,
-                eval_dataset=small_eval_dataset,
+                eval_dataset=small_eval_dataset
             )
             
             # Train and save
@@ -166,7 +169,7 @@ class SentimentModel:
             return {
                 "sentiment": result['label'],
                 "confidence": float(result['score']),
-                "model": "distilbert-base-uncased-finetuned-sst-2-english"
+                "model": self.model_name
             }
         except Exception as e:
             logger.error(f"Prediction failed: {str(e)}")

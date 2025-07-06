@@ -6,31 +6,36 @@ on:
   pull_request:
     branches: [ main ]
   schedule:
-    - cron: '0 0 * * 0'  # Weekly retraining
+    - cron: '0 2 * * 1'  # Weekly retrain on Monday 2AM UTC
 
 env:
   DOCKER_IMAGE: sentiment-analysis
-  REGISTRY: ghcr.io  # Using GitHub Container Registry
+  REGISTRY: ghcr.io  # or docker.io for DockerHub
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest pytest-cov pytest-mock
-    - name: Run tests
-      run: |
-        pytest --cov=app --cov-report=xml tests/
-    - name: Upload coverage
-      uses: codecov/codecov-action@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-mock
+
+      - name: Run tests
+        run: |
+          pytest --cov=app --cov-report=xml tests/
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v3
 
   retrain-model:
     needs: test
@@ -66,25 +71,26 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-    - uses: actions/checkout@v3
-    - name: Download retrained model
-      uses: actions/download-artifact@v3
-      with:
-        name: retrained-model
-        path: retrained_model
-    - name: Log in to GitHub Container Registry
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-    - name: Build and push
-      uses: docker/build-push-action@v4
-      with:
-        context: .
-        file: ./DockerFile
-        push: true
-        tags: |
-          ${{ secrets.DOCKER_USERNAME }}/sentiment-analysis:latest
-          ${{ secrets.DOCKER_USERNAME }}/sentiment-analysis:${{ github.sha }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Registry
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/sentiment-analysis:latest
+            ${{ secrets.DOCKER_USERNAME }}/sentiment-analysis:${{ github.run_number }}-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
