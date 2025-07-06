@@ -59,10 +59,10 @@ graph TD
 
 ### Installation
 
-#### Local Development
+#### FastAPI Local Development
 
-```bash
 # Clone repository
+```bash
 git clone https://github.com/amitaAlEngineer/sentiment-analysis-mlops.git
 cd sentiment-analysis-mlops
 
@@ -78,15 +78,46 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
+#### To run the entire MLOps stack including FastAPI, Prometheus, and Grafana
+
+  1. Go to the Application Directory then run the following
+  # Clone repository
+  ```bash
+  git clone https://github.com/amitaAlEngineer/sentiment-analysis-mlops.git
+  cd sentiment-analysis-mlops
+  ```
+  
+  2. Then Run following command
+  ```bash
+  docker-compose -f docker-compose.monitoring.yml up --build
+  ```
+
+  - 🧠 This spins up:
+
+    - The FastAPI app (http://localhost:8000)
+
+    - Prometheus for collecting metrics (http://localhost:9090)
+
+    - Grafana dashboard for visualization (http://localhost:3000)
+
+  # Grafana Login:
+
+    Username: admin
+
+    Password: admin
+
 #### Docker Deployment
 
 ```bash
 # Production
-docker run -d -p 8000:8000 --name sentiment-api amitakri/sentiment-analysis:latest
+docker pull  amitakri/sentiment-analysis:latest
+docker run -p 8000:8000 amitakri/sentiment-analysis:latest
 
 # Development with hot-reload
 docker-compose up --build
 ```
+
+
 
 ## API Documentation
 
