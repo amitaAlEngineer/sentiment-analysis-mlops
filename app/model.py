@@ -97,7 +97,8 @@ class SentimentModel:
             # Preprocess
             def tokenize_function(examples):
                 return self.tokenizer(examples["text"], padding="max_length", truncation=True)
-            tokenized = dataset.map(tokenize_function, batched=True)
+            # tokenized = dataset.map(tokenize_function, batched=True)
+            tokenized = dataset.map(tokenize_function, batched=True, num_proc=1)
 
             # Limit to speed up retraining
             small_train_dataset = tokenized["train"].shuffle(seed=42).select(range(300))
@@ -107,10 +108,11 @@ class SentimentModel:
                 output_dir=output_dir,
                 num_train_epochs=1,
                 per_device_train_batch_size=8,
-                evaluation_strategy="epoch",
+                eval_strategy="epoch",
                 save_strategy="epoch",
                 logging_dir="./logs",
                 logging_steps=10,
+                disable_tqdm=False,
                 seed=42
             )
 
@@ -122,9 +124,12 @@ class SentimentModel:
             )
             
             # Train and save
+            print("Training model...")
             trainer.train()
+            print("Saving model...")
             trainer.save_model(output_dir)
             self.tokenizer.save_pretrained(output_dir)
+            print("Retraining complete.")
             
             # Reload the retrained model
             self.model = AutoModelForSequenceClassification.from_pretrained(output_dir)

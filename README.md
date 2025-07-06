@@ -45,7 +45,7 @@ graph TD
     C --> E[Model Retraining]
     E --> F[GitHub Actions CI/CD]
     F --> G[Docker Registry]
-    G --> H[Kubernetes Deployment]
+    G --> H[Docker Deployment (Optional/Manual)]
 ```
 
 ## Getting Started
@@ -136,8 +136,6 @@ The GitHub Actions workflow includes:
 
 3. **Deployment Phase**
    - Docker image build and push
-   - Kubernetes deployment
-   - Canary release strategy
 
 ## Monitoring
 
