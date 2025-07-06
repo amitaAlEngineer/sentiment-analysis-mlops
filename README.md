@@ -136,6 +136,8 @@ The GitHub Actions workflow includes:
 
 3. **Deployment Phase**
    - Docker image build and push
+   - Kubernetes deployment
+   - Canary release strategy
 
 ## Monitoring
 
