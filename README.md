@@ -25,17 +25,26 @@ sentiment-analysis-mlops/
 └── README.md
 
 
-## Features
+---
 
-- 🚀 FastAPI REST API with Prometheus metrics
-- 🐳 Docker containerization with multi-stage builds
-- 🔄 CI/CD pipeline with GitHub Actions
-- 📊 Model versioning and retraining capabilities
-- 🔍 Comprehensive logging and monitoring
-- ✅ 90%+ test coverage with Pytest
-- 🔒 Secure API endpoints with rate limiting
+## ✨ Features
 
-## Architecture
+- 🚀 FastAPI REST API for inference and retraining
+- 🐳 Dockerized with multi-stage builds
+- 🔄 GitHub Actions-based CI/CD
+- 📈 Prometheus + Grafana monitoring
+- 🧪 90%+ test coverage (pytest)
+- 🧠 Auto model versioning and retraining
+- 🔒 Rate limiting and API security options
+
+---
+
+## 🧱 Architecture
+
+![Architecture Diagram](docs/architecture.png)
+
+<details>
+<summary>Click to view Mermaid source</summary>
 
 ```mermaid
 graph TD
@@ -47,6 +56,7 @@ graph TD
     F --> G[Docker Registry]
     G --> H[Docker Deployment - optional]
 ```
+</details>
 
 ## Getting Started
 
@@ -78,10 +88,10 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-#### To run the entire MLOps stack including FastAPI, Prometheus, and Grafana
+# To run the entire MLOps stack including FastAPI, Prometheus, and Grafana
 
   1. Go to the Application Directory then run the following
-  # Clone repository
+  ### Clone repository
   ```bash
   git clone https://github.com/amitaAlEngineer/sentiment-analysis-mlops.git
   cd sentiment-analysis-mlops
@@ -100,13 +110,13 @@ uvicorn app.main:app --reload
 
     - Grafana dashboard for visualization (http://localhost:3000)
 
-  # Grafana Login:
+  #### Grafana Login
 
     Username: admin
 
     Password: admin
 
-#### Docker Deployment
+## Docker Deployment
 
 ```bash
 # Production
